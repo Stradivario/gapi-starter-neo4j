@@ -1,10 +1,9 @@
 {
-  "name": "@gapi/starter-simple",
+  "name": "@gapi/starter-neo4j",
   "version": "1.4.44",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "install-ipfs-packages": "node ./node_modules/@rxdi/core/bin/root.js install",
     "start": "gapi start --local --lint",
     "test": "gapi test --local",
     "lint": "echo"
@@ -12,16 +11,10 @@
   "author": "Kristiyan Tachev (Stradivario)",
   "license": "MIT",
   "dependencies": {
-    "@gapi/core": "^1.4.43"
+    "@gapi/core": "^1.4.49",
+    "neo4j-driver": "^1.7.2",
+    "neo4j-graphql-js": "^2.4.0"
   },
-  "ipfs": [
-    {
-      "provider": "https://ipfs.io/ipfs/",
-      "dependencies": [
-        "QmWtJLqyokMZE37DgncpY5HhFvtFQieBzMPDQ318aJeTw6"
-      ]
-    }
-  ],
   "nodemonConfig": {
     "ignore": [
       "./src/**/*.spec.ts"
@@ -37,7 +30,6 @@
     "ext": "ts"
   },
   "devDependencies": {
-    "typescript": "^3.0.1",
-    "@gapi/cli": "^1.4.43"
+    "typescript": "^3.0.1"
   }
 }

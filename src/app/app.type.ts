@@ -1,6 +1,16 @@
-import { GraphQLScalarType, GapiObjectType, GraphQLInt} from "@gapi/core";
+import { GraphQLInt, GraphQLObjectType, GraphQLString} from "@gapi/core";
 
-@GapiObjectType()
-export class AppType {
-    readonly id: number | GraphQLScalarType = GraphQLInt;
-}
+export const AppType = new GraphQLObjectType( {
+    name: 'AppType',
+    fields: () => ({
+        id:  {
+            type: GraphQLInt
+        },
+        email: {
+            type: GraphQLString
+        },
+        name: {
+            type: GraphQLString
+        }
+    })
+});

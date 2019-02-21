@@ -1,18 +1,22 @@
-import { Controller, Type, Query, GraphQLNonNull, GraphQLInt } from "@gapi/core";
+import { Controller, Type, Query, GraphQLInt, GraphQLString } from "@gapi/core";
 import { AppType } from "./app.type";
- 
+
 @Controller()
 export class AppQueriesController {
 
     @Type(AppType)
     @Query({
-        id: {
-            type: new GraphQLNonNull(GraphQLInt)
+        id:  {
+            type: GraphQLInt
+        },
+        email: {
+            type: GraphQLString
+        },
+        name: {
+            type: GraphQLString
         }
     })
-    findApp(root, { id }, context): AppType {
-        return {id: id};
-    }
+    appType() {}
 
 }
  
