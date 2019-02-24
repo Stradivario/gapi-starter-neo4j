@@ -13,26 +13,61 @@ git clone https://github.com/Stradivario/gapi-starter-neo4j
 npm i -g @gapi/cli ts-node
 ```
 
-
-
 #### Download Neo4J database https://neo4j.com/download/
 
 Follow the steps and create your Graph using interface provided and set password to it
 
 default username for neo4j is `neo4j`
 
-- Go to `src/app/framework-imports.ts` and find this line:
-- Here we attach neo4j driver to context of our resolvers and passing basic authentication
+- Go to `src/app/app.module.ts` and find this line:
+- Here we attach neo4j driver to context of our resolvers and passing basic authentication before the actual GraphQL request is born
 - change `your-pass` with appropriate password
 
 ```typescript
-    context: {
-        driver: (neo4j.driver(
-            'bolt://localhost:7687',
-            neo4j.auth.basic('neo4j', 'your-pass')
-        ))
-    },
+        {
+            provide: ON_REQUEST_HANDLER,
+            useFactory: () => async (next, context, request: Request, h: ResponseToolkit, err: Error) => {
+                context.driver = (neo4j.driver(
+                    'bolt://localhost:7687',
+                    neo4j.auth.basic('neo4j', 'your-pass')
+                ))
+                return next;
+            }
+        }
 ```
+#### The same `context` object can be accessed also when initializing @rxdi/graphql module inside `framework-imports.ts` 
+That way we will make single initializing onto neo4j driver instead of assigning it to the object on every request
+
+```typescript
+import { GraphQLModule } from "@rxdi/graphql";
+import { Module } from "@rxdi/core";
+import { HapiModule } from "@rxdi/hapi";
+import { GraphQLModule } from "@rxdi/graphql";
+import { v1 as neo4j } from 'neo4j-driver';
+
+@Module({
+    imports: [
+        HapiModule.forRoot({
+            hapi: {
+                port: 9000
+            }
+        }),
+        GraphQLModule.forRoot({
+            graphqlOptions: {
+                context: {
+                    driver: (neo4j.driver(
+                        'bolt://localhost:7687',
+                        neo4j.auth.basic('neo4j', 'your-graph-password')
+                    ))
+                },
+                schema: null
+            }
+        }),
+    ]
+})
+export class CoreModule {}
+```
+
 
 #### Start the application
 ```bash
@@ -86,66 +121,51 @@ mutation DeleteAppType {
 ```
 
 
+#### Explanation
 
 ##### Neo4J Driver load
 ```typescript
-import { Module } from "@rxdi/core";
-import { HapiModule } from "@rxdi/hapi";
-import { GraphQLModule } from "@rxdi/graphql";
-import { v1 as neo4j } from 'neo4j-driver';
+import { Module, ON_REQUEST_HANDLER, SCHEMA_OVERRIDE, printSchema, GraphQLSchema  } from "@gapi/core";
+import { AppQueriesController } from "./app.controller";
+import { Request, ResponseToolkit } from 'hapi';
 import * as neo4jgql from 'neo4j-graphql-js';
+import { v1 as neo4j } from 'neo4j-driver';
 
 @Module({
-    providers: [{
-        provide: 'neo4j-graphql-js',
-        useValue: neo4jgql
-    }],
-    imports: [
-        HapiModule.forRoot({
-            hapi: {
-                port: 9000
+    controllers: [AppQueriesController],
+    providers: [
+        {
+            provide: SCHEMA_OVERRIDE,
+            useFactory: () => (schema: GraphQLSchema) => {
+                // Do things with bootstrapped schema
+                // For example now we augment schema so we can have neo4j-graphql CRUD operations based on Type
+                return neo4jgql.makeAugmentedSchema({ typeDefs: printSchema(schema) });
             }
-        }),
-        GraphQLModule.forRoot({
-            path: '/graphql',
-            openBrowser: false,
-            writeEffects: false,
-            graphiQlPath: '/graphiql',
-            graphiqlOptions: {
-                endpointURL: '/graphql',
-                subscriptionsEndpoint: `${
-                    process.env.GRAPHIQL_WS_SSH ? 'wss' : 'ws'
-                    }://${process.env.GRAPHIQL_WS_PATH || 'localhost'}${
-                    process.env.DEPLOY_PLATFORM === 'heroku'
-                        ? ''
-                        : `:${process.env.API_PORT ||
-                        process.env.PORT}`
-                    }/subscriptions`,
-                websocketConnectionParams: {
-                    token: process.env.GRAPHIQL_TOKEN
-                }
-            },
-            graphqlOptions: {
-                context: {
-                    driver: (neo4j.driver(
-                        'bolt://localhost:7687',
-                        neo4j.auth.basic('neo4j', 'your-graph-password')
-                    ))
-                },
-                schema: null
+        },
+        {
+            provide: ON_REQUEST_HANDLER,
+            useFactory: () => async (next, context, request: Request, h: ResponseToolkit, err: Error) => {
+                // Authenticate user here if it is not authenticated return Boom.unauthorized()
+                // if (request.headers.authorization) {
+                //     const tokenData = ValidateToken(request.headers.authorization);
+                //     const user = {};
+                //     if (!user) {
+                //         return Boom.unauthorized();
+                //     } else {
+                //         context.user = {id: 1, name: 'pesho'};
+                //     }
+                // }
+                // context.user - modifying here context will be passed to the resolver
+                // Passing Neo4J driver for every resolver context
+                context.driver = (neo4j.driver(
+                    'bolt://localhost:7687',
+                    neo4j.auth.basic('neo4j', 'your-pass')
+                ))
+                return next();
             }
-        }),
+        }
     ]
 })
-export class FrameworkImports {}
-```
-
-#### Here we inject neo4j-graphql-js library to dependency injection so graphql server will handle it and work with the library
-
-```typescript
-    providers: [{
-        provide: 'neo4j-graphql-js',
-        useValue: neo4jgql
-    }],
+export class AppModule { }
 ```
 

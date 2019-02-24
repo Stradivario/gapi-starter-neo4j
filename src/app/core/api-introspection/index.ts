@@ -23,9 +23,12 @@
   */
   export interface IQuery {
     __typename?: "Query";
-    appType: IAppType | null;
     AppType: Array<IAppType> | null;
+    findAppType: IAppType | null;
 }
+
+export   
+  type IAppTypeOrderingEnum = 'id_asc' | 'id_desc' | 'email_asc' | 'email_desc' | 'name_asc' | 'name_desc' | '_id_asc' | '_id_desc';
 
   
   export interface IAppType {
@@ -35,9 +38,6 @@
     name: string | null;
     _id: string | null;
 }
-
-export   
-  type IAppTypeOrderingEnum = 'id_asc' | 'id_desc' | 'email_asc' | 'email_desc' | 'name_asc' | 'name_desc' | '_id_asc' | '_id_desc';
 
   
   export interface IMutation {

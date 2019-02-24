@@ -1,12 +1,7 @@
 import { Module, CoreModule } from "@gapi/core";
-import { v1 as neo4j } from 'neo4j-driver';
-import * as neo4jgql from 'neo4j-graphql-js';
 
 @Module({
-    providers: [{
-        provide: 'neo4j-graphql-js',
-        useValue: neo4jgql
-    }],
+
     imports: [
         CoreModule.forRoot({
             server: {
@@ -54,12 +49,7 @@ import * as neo4jgql from 'neo4j-graphql-js';
                     }
                 },
                 graphqlOptions: {
-                    context: {
-                        driver: (neo4j.driver(
-                            'bolt://localhost:7687',
-                            neo4j.auth.basic('neo4j', '98412218')
-                        ))
-                    },
+                    context: {},
                     schema: null
                 }
             },

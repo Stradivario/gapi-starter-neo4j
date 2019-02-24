@@ -6,5 +6,6 @@ function strEnum<T extends string>(o: Array<T>): {[K in T]: K} {
         return res;
     }, Object.create(null));
 }
-export const EffectTypes = strEnum(["appType"]);
+export const EffectTypes = strEnum(["AppType",
+"findAppType"]);
 export type EffectTypes = keyof typeof EffectTypes;
